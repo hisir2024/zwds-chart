@@ -20,14 +20,14 @@ const EVIL_STARS = ['擎羊','陀罗','火星','铃星','地空','地劫'];
 
 function starStyle(name: string): string {
   const pure = name.replace(/化.*/, '');
-  if (pure === '紫微' || pure === '天府') return 'text-[#b8860b] font-bold text-[13px] star-shimmer';
-  if (MAIN_STARS.includes(pure)) return 'text-[#5c4033] font-bold text-[12px]';
-  if (EVIL_STARS.includes(pure)) return 'text-[#b8422e] text-[11px]';
-  if (name.includes('化禄')) return 'text-[#6b8e6b] font-bold text-[11px]';
-  if (name.includes('化权')) return 'text-[#b8422e] font-bold text-[11px]';
-  if (name.includes('化科')) return 'text-[#4a7a9b] font-bold text-[11px]';
-  if (name.includes('化忌')) return 'text-[#8b4513] font-bold text-[11px]';
-  return 'text-[#6b5c4a] text-[11px]';
+  if (pure === '紫微' || pure === '天府') return 'text-[#b8860b] font-bold text-[15px] star-shimmer';
+  if (MAIN_STARS.includes(pure)) return 'text-[#3a2a1a] font-bold text-[14px]';
+  if (EVIL_STARS.includes(pure)) return 'text-[#b8422e] text-[13px]';
+  if (name.includes('化禄')) return 'text-[#5a7a5a] font-bold text-[13px]';
+  if (name.includes('化权')) return 'text-[#b8422e] font-bold text-[13px]';
+  if (name.includes('化科')) return 'text-[#3a6a8b] font-bold text-[13px]';
+  if (name.includes('化忌')) return 'text-[#7a3a10] font-bold text-[13px]';
+  return 'text-[#4a3828] text-[13px]';
 }
 
 export default function ChartGrid({ data }: { data: any }) {
@@ -83,8 +83,8 @@ export default function ChartGrid({ data }: { data: any }) {
               style={{background: 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(250,247,240,0.8) 100%)'}}>
               {/* 宫位名 */}
               <div className="text-center pb-1 mb-1 relative">
-                <div className="text-xs font-bold text-[var(--ink)] tracking-[1px]">{p?.name}</div>
-                <div className="text-[10px] mt-0.5" style={{color: diColor}}>{DI_ZHI[dzIdx]}</div>
+                <div className="text-sm font-bold text-[var(--ink)] tracking-[1px]">{p?.name}</div>
+                <div className="text-xs mt-0.5" style={{color: diColor}}>{DI_ZHI[dzIdx]}</div>
                 <div className="mx-auto w-5 h-px mt-0.5" style={{background: `linear-gradient(to right, transparent, ${diColor}88, transparent)`}} />
               </div>
               {/* 主星 */}

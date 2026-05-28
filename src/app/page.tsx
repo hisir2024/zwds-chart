@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { generateChart } from '@/lib/zwds/calculate';
 import ChartGrid from '@/components/ChartGrid';
+import InfoPanel from '@/components/InfoPanel';
+import StarDict from '@/components/StarDict';
 import EngineSwitcher from '@/components/EngineSwitcher';
 import PdfExporter from '@/components/PdfExporter';
 import { AIProvider } from '@/lib/ai/llm';
@@ -9,8 +11,8 @@ import { saveCache, loadCache, clearCache } from '@/lib/stream-cache';
 
 type StreamState = 'idle' | 'generating' | 'done' | 'interrupted';
 
-const labelCls = 'block text-[11px] text-[var(--ink-light)] mb-1.5 tracking-[2px]';
-const inputCls = 'w-full px-3 py-2 bg-[#faf7f0] border border-[rgba(60,50,40,0.15)] rounded text-sm text-[var(--ink)] placeholder:text-[#b5a890] focus:outline-none focus:border-[#b8860b] focus:ring-1 focus:ring-[rgba(184,134,11,0.15)] transition-all font-serif';
+const labelCls = 'block text-xs text-[var(--ink-light)] mb-1.5 tracking-[2px]';
+const inputCls = 'w-full px-3 py-2 bg-[#faf7f0] border border-[rgba(60,50,40,0.15)] rounded text-base text-[var(--ink)] placeholder:text-[#b5a890] focus:outline-none focus:border-[#b8860b] focus:ring-1 focus:ring-[rgba(184,134,11,0.15)] transition-all font-serif';
 
 export default function Home() {
   const [birth, setBirth] = useState({ year: 1995, month: 8, day: 15, hour: 14, minute: 20, longitude: 112.4, gender: '男' as const });
@@ -18,6 +20,7 @@ export default function Home() {
   const [chart, setChart] = useState<any>(null);
   const [reading, setReading] = useState('');
   const [state, setState] = useState<StreamState>('idle');
+  const [tab, setTab] = useState<'chart'|'info'|'stars'|'reading'>('chart');
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -105,7 +108,7 @@ export default function Home() {
         <div className="ink-frame rounded-lg p-6 bg-[#faf7f0]">
           <div className="flex items-center gap-3 mb-5">
             <span className="w-1 h-5 bg-[var(--vermillion)] rounded-full" />
-            <h2 className="text-sm tracking-[4px] text-[var(--ink)]">出生信息</h2>
+            <h2 className="text-base tracking-[4px] text-[var(--ink)]">出生信息</h2>
           </div>
 
           {/* 第一行：日期 + 时间 */}
@@ -189,31 +192,61 @@ export default function Home() {
       {/* ===== 输出区 ===== */}
       {chart && (
         <section id="reading-output" className="max-w-3xl mx-auto px-6 space-y-6">
-          {/* 命盘网格 */}
-          <ChartGrid data={chart} />
+          {/* 标签导航 */}
+          <nav className="flex gap-1 p-1 rounded-lg bg-[rgba(60,50,40,0.04)]">
+            {([
+              ['chart', '命盘'],
+              ['info', '信息'],
+              ['stars', '星曜'],
+              ['reading', '盘解'],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className={`flex-1 py-2.5 rounded-md text-sm tracking-[2px] transition-all duration-300 ${
+                  tab === key
+                    ? 'bg-[#b8860b] text-[#faf7f0] shadow-[0_1px_4px_rgba(184,134,11,0.25)]'
+                    : 'text-[var(--ink-light)] hover:text-[var(--ink)] hover:bg-[rgba(60,50,40,0.05)]'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+
+          {/* 命盘 */}
+          {tab === 'chart' && <ChartGrid data={chart} />}
+
+          {/* 信息面板 */}
+          {tab === 'info' && <InfoPanel data={chart} />}
+
+          {/* 星曜辞典 */}
+          {tab === 'stars' && <StarDict />}
 
           {/* 白话盘解 */}
-          <div className="ink-frame rounded-lg p-6 bg-[#faf7f0]">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="w-1 h-5 bg-[var(--jade)] rounded-full" />
-              <h2 className="text-sm tracking-[4px] text-[var(--ink)]">白话盘解</h2>
-              {state === 'generating' && (
-                <span className="text-[10px] text-[var(--vermillion)] animate-pulse tracking-[2px]">推演中...</span>
-              )}
-            </div>
-            <div className="text-sm leading-loose text-[var(--ink-light)] min-h-[200px] whitespace-pre-wrap font-serif">
-              {reading || <span className="text-[#b5a890]">AI 正排布星轨，推演命局...</span>}
-              {state === 'generating' && (
-                <span className="typing-cursor" />
-              )}
-            </div>
-            {state === 'done' && (
-              <div className="mt-5 pt-4 flex justify-between text-[11px] text-[#b5a890] tracking-[1px]" style={{borderTop: '1px solid rgba(60,50,40,0.08)'}}>
-                <span>解读已毕 · 命盘已存</span>
-                <span className="cursor-pointer hover:text-[var(--vermillion)] transition-colors" onClick={handleClear}>清除重来</span>
+          {tab === 'reading' && (
+            <div className="ink-frame rounded-lg p-6 bg-[#faf7f0]">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="w-1 h-5 bg-[var(--jade)] rounded-full" />
+                <h2 className="text-base tracking-[4px] text-[var(--ink)]">白话盘解</h2>
+                {state === 'generating' && (
+                  <span className="text-[10px] text-[var(--vermillion)] animate-pulse tracking-[2px]">推演中...</span>
+                )}
               </div>
-            )}
-          </div>
+              <div className="text-base leading-loose text-[var(--ink-light)] min-h-[200px] whitespace-pre-wrap font-serif">
+                {reading || <span className="text-[#b5a890]">AI 正排布星轨，推演命局...</span>}
+                {state === 'generating' && (
+                  <span className="typing-cursor" />
+                )}
+              </div>
+              {state === 'done' && (
+                <div className="mt-5 pt-4 flex justify-between text-[11px] text-[#b5a890] tracking-[1px]" style={{borderTop: '1px solid rgba(60,50,40,0.08)'}}>
+                  <span>解读已毕 · 命盘已存</span>
+                  <span className="cursor-pointer hover:text-[var(--vermillion)] transition-colors" onClick={handleClear}>清除重来</span>
+                </div>
+              )}
+            </div>
+          )}
         </section>
       )}
 
