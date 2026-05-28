@@ -6,7 +6,7 @@ export default function PdfExporter({ targetId }: { targetId: string }) {
   const handleExport = async () => {
     const el = document.getElementById(targetId);
     if (!el) return;
-    const canvas = await html2canvas(el, { scale: 2, useCORS: true, logging: false });
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true, logging: false, backgroundColor: '#1a1a2e' });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const w = pdf.internal.pageSize.getWidth();
@@ -18,7 +18,7 @@ export default function PdfExporter({ targetId }: { targetId: string }) {
   return (
     <button
       onClick={handleExport}
-      className="px-4 py-3 border border-stone-300 rounded-lg hover:bg-stone-100 text-sm"
+      className="px-4 py-3 border border-[#c9a84c] text-[#c9a84c] rounded-lg hover:bg-[#c9a84c] hover:text-[#1a1a2e] text-sm transition-colors"
     >
       导出PDF
     </button>

@@ -2,9 +2,9 @@
 import { AIProvider } from '@/lib/ai/llm';
 
 const ENGINES = [
-  { value: 'openai' as const, label: 'OpenAI', desc: '逻辑严密' },
-  { value: 'qwen' as const, label: '通义千问', desc: '中文流畅' },
-  { value: 'deepseek' as const, label: 'DeepSeek', desc: '性价比高' },
+  { value: 'deepseek' as const, label: 'DeepSeek', desc: '性价比高，推荐日常使用' },
+  { value: 'qwen' as const, label: '通义千问', desc: '中文流畅，语感佳' },
+  { value: 'openai' as const, label: 'OpenAI', desc: '逻辑严密，格局分析' },
 ];
 
 export default function EngineSwitcher({ current, onChange }: { current: AIProvider; onChange: (v: AIProvider) => void }) {
@@ -14,14 +14,14 @@ export default function EngineSwitcher({ current, onChange }: { current: AIProvi
         <button
           key={e.value}
           onClick={() => onChange(e.value)}
-          className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${
+          className={`px-3 py-2 rounded-md text-xs border transition-colors ${
             current === e.value
-              ? 'bg-stone-800 text-white border-stone-800'
-              : 'bg-white border-stone-300 hover:border-stone-500'
+              ? 'bg-[#c9a84c] text-[#1a1a2e] border-[#c9a84c] font-bold'
+              : 'bg-[#0d1b2a] text-[#8b7d6b] border-[#2a3a6a] hover:border-[#f0d68a] hover:text-[#e0d5c1]'
           }`}
         >
           {e.label}
-          <span className="text-xs opacity-70 ml-1">({e.desc})</span>
+          <span className="block text-[10px] opacity-70 mt-0.5">{e.desc}</span>
         </button>
       ))}
     </div>
