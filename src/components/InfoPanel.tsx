@@ -9,7 +9,7 @@ const valCls = 'text-base text-[var(--ink)] font-serif';
 export default function InfoPanel({ data }: Props) {
   if (!data) return null;
 
-  const { lunar, yearGan, yearZhi, mingGongIndex, shenGongIndex, juShu, gender, shengxiao, daxian, sihua } = data;
+  const { lunar, yearGan, yearZhi, mingGongIndex, shenGongIndex, juShu, gender, shengxiao, daxian, xiaoxian, sihua, mingZhu, shenZhu, changSheng, palaces } = data;
 
   const baZi = `${TIAN_GAN[yearGan]}${DI_ZHI[yearZhi]} ${TIAN_GAN[lunar.monthGanIndex]}${DI_ZHI[lunar.monthZhiIndex]} ${TIAN_GAN[lunar.dayGanIndex]}${DI_ZHI[lunar.dayZhiIndex ?? 0]} ${TIAN_GAN[lunar.hourGanIndex]}${DI_ZHI[lunar.hourZhiIndex]}`;
 
@@ -71,6 +71,8 @@ export default function InfoPanel({ data }: Props) {
             <span className="text-[#4a7a9b]">{sihua.ke ? sihua.ke+'科' : ''}</span>{' '}
             <span className="text-[#8b4513]">{sihua.ji ? sihua.ji+'忌' : ''}</span>
           </div></div>
+          <div><span className={labelCls}>命主</span><div className={valCls + ' text-[var(--gold)]'}>{mingZhu || '—'}</div></div>
+          <div><span className={labelCls}>身主</span><div className={valCls + ' text-[var(--gold)]'}>{shenZhu || '—'}</div></div>
         </div>
       </div>
 
@@ -101,6 +103,48 @@ export default function InfoPanel({ data }: Props) {
           </table>
         </div>
       </div>
+
+      {/* 十二长生 */}
+      {changSheng && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="w-1 h-4 bg-[var(--gold)] rounded-full" />
+            <h3 className="text-sm tracking-[3px] text-[var(--ink)]">十二长生</h3>
+          </div>
+          <div className="grid grid-cols-3 md:grid-cols-4 gap-1.5">
+            {palaces && DI_ZHI.map((dz, i) => {
+              const p = palaces.find((g: any) => g.dz === dz);
+              return (
+                <div key={dz} className="text-center py-1.5 px-1 rounded bg-[rgba(184,150,100,0.04)]">
+                  <div className="text-[11px] text-[var(--ink-light)]">{p?.name || dz}</div>
+                  <div className="text-xs text-[var(--ink)] font-bold">{changSheng[i] || '—'}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 小限 */}
+      {xiaoxian && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="w-1 h-4 bg-[var(--vermillion)] rounded-full" />
+            <h3 className="text-sm tracking-[3px] text-[var(--ink)]">小限（流年参考）</h3>
+          </div>
+          <div className="grid grid-cols-3 md:grid-cols-4 gap-1.5 text-center text-xs">
+            {DI_ZHI.map((dz, i) => {
+              const ages = xiaoxian[i] || [];
+              return (
+                <div key={dz} className="py-1.5 rounded bg-[rgba(184,150,100,0.04)]">
+                  <div className="text-[11px] text-[var(--ink-light)]">{dz}</div>
+                  <div className="text-[10px] text-[var(--ink)]">{ages.length > 0 ? ages[0]+'–'+ages[ages.length-1] : '—'}岁</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

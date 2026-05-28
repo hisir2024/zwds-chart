@@ -7,6 +7,16 @@ import {
   JU_MAP, YIN_INDEX,
   zuoFu, youBi, wenChang, wenQu, diKong, diJie,
   tianKui, tianYue, luCun, qingYang, tuoLuo, huoXing, lingXing, tianMa,
+  // 新增
+  getMingZhu, getShenZhu,
+  getChangSheng,
+  getMiaoLabel,
+  getYearZhiStars,
+  getYearGanExtraStars, getZhengKongWang,
+  getMonthExtraStars,
+  getHourExtraStars,
+  getOtherStars,
+  getXiaoXian,
 } from './stars';
 
 // ----- 命宫 -----
@@ -34,7 +44,7 @@ function getJuShu(yearGan: number, yearZhi: number): number {
   const gi = (yearGan * 6 + yearZhi) % 60;
   const g = Math.floor(gi / 2) % 30;
   const ny = Math.floor(g / 6) % 5;
-  return [4, 3, 2, 6, 5][ny]; // 金木水火土 → 局数
+  return [4, 3, 2, 6, 5][ny];
 }
 
 // ----- 紫微星位置 -----
@@ -45,7 +55,7 @@ function calcZiWeiZhi(juShu: number, lunarDay: number): number {
   return (YIN_INDEX - (q + 1) + 120) % 12;
 }
 
-// ----- 紫微系主星（紫微→天机→...→廉贞）-----
+// ----- 紫微系主星 -----
 function placeZiWeiStars(zwZhi: number) {
   return [
     { name: '紫微', dzIndex: zwZhi },
@@ -99,6 +109,8 @@ export function generateChart(year: number, month: number, day: number, hour: nu
   const lunar = gregorianToLunar({ year, month, day, hour, minute: _minute, longitude: _longitude, gender });
   const yearGan = lunar.yearGanIndex;
   const yearZhi = lunar.yearZhiIndex;
+  const monthZhi = lunar.monthZhiIndex;
+  const hourZhi = lunar.hourZhiIndex;
 
   const mingIdx = calcMingGong(lunar.month, lunar.hourZhi);
   const shenIdx = calcShenGong(lunar.month, lunar.hourZhi);
@@ -110,12 +122,17 @@ export function generateChart(year: number, month: number, day: number, hour: nu
 
   const allMain = [...placeZiWeiStars(zwZhi), ...placeTianFuStars(tfZhi)];
 
-  // 辅星
+  // --- 辅星 ---
   const aux: { name: string; dzIndex: number }[] = [];
-  aux.push({ name: '左辅', dzIndex: zuoFu(lunar.month) });
-  aux.push({ name: '右弼', dzIndex: youBi(lunar.month) });
-  aux.push({ name: '文昌', dzIndex: wenChang(lunar.hourZhi) });
-  aux.push({ name: '文曲', dzIndex: wenQu(lunar.hourZhi) });
+  const zf = zuoFu(lunar.month);
+  const yb = youBi(lunar.month);
+  const wc = wenChang(lunar.hourZhi);
+  const wq = wenQu(lunar.hourZhi);
+
+  aux.push({ name: '左辅', dzIndex: zf });
+  aux.push({ name: '右弼', dzIndex: yb });
+  aux.push({ name: '文昌', dzIndex: wc });
+  aux.push({ name: '文曲', dzIndex: wq });
   aux.push({ name: '地空', dzIndex: diKong(lunar.hourZhi) });
   aux.push({ name: '地劫', dzIndex: diJie(lunar.hourZhi) });
   aux.push({ name: '天魁', dzIndex: tianKui(yearGan) });
@@ -128,48 +145,112 @@ export function generateChart(year: number, month: number, day: number, hour: nu
   aux.push({ name: '铃星', dzIndex: lingXing(yearGan, lunar.hourZhi) });
   aux.push({ name: '天马', dzIndex: tianMa(yearGan) });
 
-  const sihua = getSiHua(yearGan);
-  const daxian = getDaXian(lunar.year, gender, mingIdx);
+  // --- 月系补充星 ---
+  const monthExtras = getMonthExtraStars(monthZhi);
+  Object.entries(monthExtras).forEach(([name, dzIdx]) => aux.push({ name, dzIndex: dzIdx }));
 
-  // 构建每宫星曜
+  // --- 年支系诸星 ---
+  const yearZhiStars = getYearZhiStars(yearZhi);
+  Object.entries(yearZhiStars).forEach(([name, dzIdx]) => aux.push({ name, dzIndex: dzIdx }));
+
+  // --- 年干系补充星 ---
+  const yearGanExtras = getYearGanExtraStars(yearGan);
+  Object.entries(yearGanExtras).forEach(([name, dzIdx]) => aux.push({ name, dzIndex: dzIdx }));
+  aux.push({ name: '正空亡', dzIndex: getZhengKongWang(yearGan) });
+
+  // --- 时系补充星 ---
+  const hourExtras = getHourExtraStars(hourZhi);
+  Object.entries(hourExtras).forEach(([name, dzIdx]) => aux.push({ name, dzIndex: dzIdx }));
+
+  // --- 其他星 ---
+  const others = getOtherStars(zf, yb, wc, wq, lunar.day, yearZhi, mingIdx, shenIdx);
+  Object.entries(others).forEach(([name, dzIdx]) => aux.push({ name, dzIndex: dzIdx }));
+
+  // --- 天伤(奴仆宫) / 天使(疾厄宫) ---
+  const nuPuIdx = (mingIdx - 7 + 12) % 12; // 交友宫
+  const jiEIdx = (mingIdx - 5 + 12) % 12;  // 疾厄宫
+  aux.push({ name: '天伤', dzIndex: nuPuIdx });
+  aux.push({ name: '天使', dzIndex: jiEIdx });
+
+  // --- 四化 ---
+  const sihua = getSiHua(yearGan);
+
+  // --- 大限 & 小限 ---
+  const daxian = getDaXian(lunar.year, gender, mingIdx);
+  const xiaoxian = getXiaoXian(yearZhi, gender);
+
+  // --- 命主 / 身主 ---
+  const mingZhu = getMingZhu(mingIdx);
+  const shenZhu = getShenZhu(yearZhi);
+
+  // --- 十二长生 ---
+  const wuxingForCS = juShu; // 2水 3木 4金 5土 6火
+  const changSheng = getChangSheng(wuxingForCS, gender);
+
+  // --- 构建每宫星曜 ---
   const starsAtPos: Record<number, { main: string[]; aux: string[] }> = {};
   for (let i = 0; i < 12; i++) starsAtPos[i] = { main: [], aux: [] };
   allMain.forEach(s => starsAtPos[s.dzIndex].main.push(s.name));
   aux.forEach(s => starsAtPos[s.dzIndex].aux.push(s.name));
 
-  // 四化标签
+  // --- 四化标签 ---
   const huaNames = ['化禄', '化权', '化科', '化忌'];
   const huaStars = [sihua.lu, sihua.quan, sihua.ke, sihua.ji];
   huaStars.forEach((sn, i) => {
     if (!sn) return;
     const st = allMain.find(s => s.name === sn);
-    if (st) starsAtPos[st.dzIndex].aux.push(huaNames[i]);
+    if (st) {
+      starsAtPos[st.dzIndex].aux.push(huaNames[i]);
+    } else {
+      // 四化可能在辅星上（文昌/文曲/左辅/右弼）
+      const auxSt = aux.find(s => s.name === sn);
+      if (auxSt) starsAtPos[auxSt.dzIndex].aux.push(huaNames[i]);
+    }
   });
+
+  // --- 庙旺评分 ---
+  const miaoAtPos: Record<number, Record<string, string>> = {};
+  for (let i = 0; i < 12; i++) {
+    miaoAtPos[i] = {};
+    const allHere = [...(starsAtPos[i]?.main || []), ...(starsAtPos[i]?.aux || [])];
+    allHere.forEach(s => {
+      const label = getMiaoLabel(s, i);
+      if (label) miaoAtPos[i][s] = label;
+    });
+  }
 
   return {
     lunar,
     yearGan,
     yearZhi,
     monthGan: lunar.monthGanIndex,
-    monthZhi: lunar.monthZhiIndex,
+    monthZhi,
     hourGan: lunar.hourGanIndex,
-    hourZhi: lunar.hourZhiIndex,
+    hourZhi,
     gender,
     shengxiao: lunar.shengxiao,
     juShu,
     mingGongIndex: mingIdx,
     shenGongIndex: shenIdx,
+    mingZhu,
+    shenZhu,
     gongs,
     allMainStars: allMain,
     aux,
     sihua,
     daxian,
+    xiaoxian,
+    changSheng,
+    miaoAtPos,
     starsAtPos,
     palaces: gongs.map(g => ({
       name: g.name,
       dz: DI_ZHI[g.dzIndex],
+      dzIndex: g.dzIndex,
       stars: starsAtPos[g.dzIndex]?.main || [],
       auxStars: starsAtPos[g.dzIndex]?.aux || [],
+      changSheng: changSheng[g.dzIndex] || '',
+      miao: miaoAtPos[g.dzIndex] || {},
     })),
   };
 }
